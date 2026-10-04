@@ -1,125 +1,125 @@
-# electrical-panel-label-plates · 電箱標籤牌自動化
+# electrical-panel-label-plates · 电箱标签牌自动化
 
 ---
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://python.org)
-[![Part of the MEP Automation Toolkit](https://img.shields.io/badge/Toolkit-MEP%20automation-1565C0?logo=github&logoColor=white)](https://github.com/David-CB666)
+[![Part of the MEP Automation Toolkit](https://img.shields.io/badge/Toolkit-MEP%20automation-1565C0?logo=github&logoColor=white)](https://github.com/gba-mep)
 
 **Full automation pipeline for electrical panel label plates**
 
 CAD SLD → parsed circuit table → Word label plates → CAD vector fabrication drawing
 
-[快速開始](#工作流) · [文件結構](#文件結構) · [技術棧](#技術棧)
+[快速开始](#工作流) · [文件结构](#文件结构) · [技术栈](#技术栈)
 
 </div>
 
-![電箱標籤牌全自動管線](assets/pipeline-overview.jpg)
+![电箱标签牌全自动管线](assets/pipeline-overview.jpg)
 
 ---
 
-> 從 CAD 單線圖（DWG/DXF）→ 解析迴路表（JSON）→ Word 標籤牌（docx）→ CAD 向量加工圖（DXF/SVG，1:1 尺寸註解）。全自動管線。
+> 从 CAD 单线图（DWG/DXF）→ 解析回路表（JSON）→ Word 标签牌（docx）→ CAD 向量加工图（DXF/SVG，1:1 尺寸注解）。全自动管线。
 
-## 解決什麼問題
+## 解决什么问题
 
-電氣工程中「電箱標籤牌」= 貼喺配電箱內每個斷路器下方嘅細標識條，黑底白字，寫「用途 + 迴路編號」。廣告商據此印製後貼到現場每個 MCB/RCD 上。
+电气工程中「电箱标签牌」= 贴在配电箱内每个断路器下方的细标识条，黑底白字，写「用途 + 回路编号」。广告商据此印制后贴到现场每个 MCB/RCD 上。
 
-人手做嘅痛點：
-- 幾十個迴路逐個打字，容易出錯
-- RCD 極數判斷錯（最常見、最致命）
-- 欄寬唔一致，印出來歪歪斜斜
-- 要轉 CAD 加工圖俾廣告商，重新畫一次
+人手做的痛点：
+- 几十个回路逐个打字，容易出错
+- RCD 极数判断错（最常见、最致命）
+- 栏宽不一致，印出来歪歪斜斜
+- 要转 CAD 加工图给广告商，重新画一次
 
-**electrical-panel-label-plates** 將成個流程標準化、腳本化。
+**electrical-panel-label-plates** 将整个流程标准化、脚本化。
 
 ## 核心特性
 
-### ⚡ 兩種 SLD 格式支援
-- **Format A** — 縱向量表格式
-- **Format B** — 橫向網格格式
+### ⚡ 两种 SLD 格式支援
+- **Format A** — 纵向量表格式
+- **Format B** — 横向网格格式
 
-### 🎯 17:25 斜線數原則
-RCD 極數 = 單線圖符號嘅**斜線數目**，唔係睇額定值。
-呢個係最容易犯、亦最致命嘅錯誤。
+### 🎯 17:25 斜线数原则
+RCD 极数 = 单线图符号的**斜线数目**，不是看额定值。
+这个是最容易犯、亦最致命的错误。
 
-### 👤 Human-in-the-Loop 確認關卡
-RCD 極數自動判斷後，必須人工確認先至生成。
+### 👤 Human-in-the-Loop 确认关卡
+RCD 极数自动判断后，必须人工确认先至生成。
 
-### 📐 固定佈局欄寬鎖定
-- `tblLayout=fixed` 鎖死欄寬
-- 黑底 / 白字 / 黑體字體規格
-- A3 / A4 自動紙張尺寸選擇
+### 📐 固定布局栏宽锁定
+- `tblLayout=fixed` 锁死栏宽
+- 黑底 / 白字 / 黑体字体规格
+- A3 / A4 自动纸张尺寸选择
 
-### 🛠️ CAD 向量輸出
-- DXF + SVG 雙格式
-- 1:1 尺寸註解
+### 🛠️ CAD 向量输出
+- DXF + SVG 双格式
+- 1:1 尺寸注解
 - 逐行 MTEXT 定位（避免 AutoCAD 渲染溢出）
-- RCD 欄自動合併偵測
+- RCD 栏自动合并侦测
 
-### 📏 雙行字幕系統
+### 📏 双行字幕系统
 - `balance_lines` + `cell_lines`
-- 2 行 cap 機制，確保唔會超出標籤高度
+- 2 行 cap 机制，确保不会超出标签高度
 
-### ✅ 完整驗證套件
-- `verify_label_widths.py` — 寬度驗證
-- `verify_label_cad.py` — CAD 輸出驗證
-- `render_check_label_cad.py` — 無頭自渲染檢查
-- DXF → DWG 轉換（AutoCAD script）
-- Pytest 回歸測試閘
+### ✅ 完整验证套件
+- `verify_label_widths.py` — 宽度验证
+- `verify_label_cad.py` — CAD 输出验证
+- `render_check_label_cad.py` — 无头自渲染检查
+- DXF → DWG 转换（AutoCAD script）
+- Pytest 回归测试闸
 
-### 🐛 21 個 documented pitfalls
-Word 排版 / SLD 解析 / CAD 輸出三大類坑位全記錄。
+### 🐛 21 个 documented pitfalls
+Word 排版 / SLD 解析 / CAD 输出三大类坑位全记录。
 
 ## 工作流
 
 ```
-CAD 單線圖 (DWG)
+CAD 单线图 (DWG)
     ↓
-DXF 轉換
+DXF 转换
     ↓
-解析迴路表 (JSON)
+解析回路表 (JSON)
     ↓
-RCD 極數自動判斷（17:25 原則）
+RCD 极数自动判断（17:25 原则）
     ↓
-👤 人工確認關卡
+👤 人工确认关卡
     ↓
-生成 Word 標籤牌 (docx)
-    ↓ （可選 --cad）
-CAD 向量加工圖 (DXF / SVG，帶尺寸註解)
+生成 Word 标签牌 (docx)
+    ↓ （可选 --cad）
+CAD 向量加工图 (DXF / SVG，带尺寸注解)
 ```
 
-## 適用場景
+## 适用场景
 
-| 場景 | 例子 |
+| 场景 | 例子 |
 |:---|:---|
-| 從單線圖生成標籤牌 | 新裝修/改裝工程電箱標識 |
-| 由 Word 轉 CAD 加工圖 | 俾廣告商/加工場 1:1 落料 |
-| 批量調整標籤內容 | 更改迴路名稱、編號 |
-| 現有標籤牌樣式核對 | 驗證欄寬、字體、格式 |
+| 从单线图生成标签牌 | 新装修/改装工程电箱标识 |
+| 由 Word 转 CAD 加工图 | 给广告商/加工场 1:1 落料 |
+| 批量调整标签内容 | 更改回路名称、编号 |
+| 现有标签牌样式核对 | 验证栏宽、字体、格式 |
 
-**唔適用**：電箱大樣圖/arrangement drawing；材料報批。
+**不适用**：电箱大样图/arrangement drawing；材料报批。
 
-## 文件結構
+## 文件结构
 
 ```
 electrical-panel-label-plates/
 ├── README.md       # 本文件
-└── DOCUMENTATION.md        # 完整技能文檔（規格 + 工作流 + 坑位大全）
+└── DOCUMENTATION.md        # 完整技能文档（规格 + 工作流 + 坑位大全）
 ```
 
-## 技術棧
+## 技术栈
 
-- **Python** + **ezdxf** — DXF 解析與 CAD 輸出
-- **python-docx** — Word 標籤牌生成
-- **PyMuPDF** — PDF 渲染與驗證
+- **Python** + **ezdxf** — DXF 解析与 CAD 输出
+- **python-docx** — Word 标签牌生成
+- **PyMuPDF** — PDF 渲染与验证
 
-## 兩條用戶鐵律
+## 两条用户铁律
 
-1. **只出 Word（.docx），不出 PNG 圖。** 除非用戶明確要求圖片（如俾廣告商嘅規格標註圖特例）。
-2. **用戶手改過嘅 docx 只准讀取理解，禁止覆寫。** 重新生成時輸出必須去 temp 或加 `_v2` 後綴。
+1. **只出 Word（.docx），不出 PNG 图。** 除非用户明确要求图片（如给广告商的规格标注图特例）。
+2. **用户手改过的 docx 只准读取理解，禁止覆写。** 重新生成时输出必须去 temp 或加 `_v2` 后缀。
 
-詳細用法請參閱 [DOCUMENTATION.md](DOCUMENTATION.md)。
+详细用法请参阅 [DOCUMENTATION.md](DOCUMENTATION.md)。
 
 ---
 ## License
@@ -130,10 +130,10 @@ MIT License — feel free to use, modify, and share.
 
 ## Related repositories
 
-Part of the **[MEP & construction document automation toolkit](https://github.com/David-CB666)** — open-source tools built from real jobsite workflows.
+Part of the **[MEP & construction document automation toolkit](https://github.com/gba-mep)** — open-source tools built from real jobsite workflows.
 
-- **Handbook** — [ai-agent-manual](https://github.com/David-CB666/ai-agent-manual) (8-level AI cultivation for engineers)
-- **Document generation** — [material-approval-pipeline](https://github.com/David-CB666/material-approval-pipeline) · [material-submittal-generator](https://github.com/David-CB666/material-submittal-generator) · [excel-template-filler](https://github.com/David-CB666/excel-template-filler) · [python-docx-photo-grid](https://github.com/David-CB666/python-docx-photo-grid) · [daily-construction-log](https://github.com/David-CB666/daily-construction-log) · [officecli-workflow](https://github.com/David-CB666/officecli-workflow)
-- **Engineering calculation** — [lighting-lux-calculator](https://github.com/David-CB666/lighting-lux-calculator) · [ups-discharge-time-calculator](https://github.com/David-CB666/ups-discharge-time-calculator) · [gantt-chart-pro](https://github.com/David-CB666/gantt-chart-pro) · [electrical-test-report-generator](https://github.com/David-CB666/electrical-test-report-generator)
-- **Data & OCR** — [ocr-skill](https://github.com/David-CB666/ocr-skill) · [VBA-Macro-Reader-v2.0.0](https://github.com/David-CB666/VBA-Macro-Reader-v2.0.0)
-- **Compliance & AI ops** — [confined-space-planner](https://github.com/David-CB666/confined-space-planner) · [skill-router](https://github.com/David-CB666/skill-router) · [consulting-services](https://github.com/David-CB666/consulting-services)
+- **Handbook** — [ai-agent-manual](https://github.com/gba-mep/ai-agent-manual) (8-level AI cultivation for engineers)
+- **Document generation** — [material-approval-pipeline](https://github.com/gba-mep/material-approval-pipeline) · [material-submittal-generator](https://github.com/gba-mep/material-submittal-generator) · [excel-template-filler](https://github.com/gba-mep/excel-template-filler) · [python-docx-photo-grid](https://github.com/gba-mep/python-docx-photo-grid) · [daily-construction-log](https://github.com/gba-mep/daily-construction-log) · [officecli-workflow](https://github.com/gba-mep/officecli-workflow)
+- **Engineering calculation** — [lighting-lux-calculator](https://github.com/gba-mep/lighting-lux-calculator) · [ups-discharge-time-calculator](https://github.com/gba-mep/ups-discharge-time-calculator) · [gantt-chart-pro](https://github.com/gba-mep/gantt-chart-pro) · [electrical-test-report-generator](https://github.com/gba-mep/electrical-test-report-generator)
+- **Data & OCR** — [ocr-skill](https://github.com/gba-mep/ocr-skill) · [VBA-Macro-Reader-v2.0.0](https://github.com/gba-mep/VBA-Macro-Reader-v2.0.0)
+- **Compliance & AI ops** — [confined-space-planner](https://github.com/gba-mep/confined-space-planner) · [路由规则](https://github.com/gba-mep/路由规则) · [consulting-services](https://github.com/gba-mep/consulting-services)
