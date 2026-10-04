@@ -35,7 +35,7 @@ CAD SLD → parsed circuit table → Word label plates → CAD vector fabricatio
 
 ## 核心特性
 
-### ⚡ 两种 SLD 格式支援
+### ⚡ 两种 SLD 格式支持
 - **Format A** — 纵向量表格式
 - **Format B** — 横向网格格式
 
