@@ -17,7 +17,7 @@ CAD 单线图 (DWG) → DXF → 解析回路表 (JSON) → 人工确认 RCD 极�
                                                            CAD 向量加工图 (DXF / SVG，带尺寸标注)
 ```
 
-**知识库 canonical 路径（脚本全在这里，本技能只引用、不复制代码）：**
+**本技能脚本路径（脚本全在这里，本技能只引用、不复制代码）：**
 `<KB_DIR>/electrical-panel-labels/`
 - 脚本：`scripts/` 子目录（30 个，见 §7 索引）
 - 文档：规格文档 00~08 + README
@@ -145,15 +145,15 @@ PYTHON_EXE="<cad venv python>" python make_panel_labels.py \
 | `make_panel_labels.py` | **编排入口**（解析→格式判断→极数确认→生成→verify gate→可选 CAD）|
 | `parse_sld_panels.py` | 格式 A（纵向量表）解析器 → JSON（`--dxf`/`--out`）|
 | `parse_el01.py` | 格式 B（横向网格）解析器 → JSON（`--dxf`/`--out`）；v4 含 `group_by_rccb_span()` 几何跨度量度分组 |
-| `gen_panel_labels_圖書館_v2.py` | 格式 A 生成器（`--json`/`--out`/`--paper`）|
+| `gen_panel_labels_图书馆_v2.py` | 格式 A 生成器（`--json`/`--out`/`--paper`）|
 | `gen_label_docx_el01.py` | 格式 B 生成器（`--json`/`--out`/`--paper`）|
 | `verify_label_widths.py` | 栏宽校验 gate（`--docx`/`--gate`，退出码 1=不合规）|
 | `gen_label_cad.py` | **Word → CAD 向量加工图**（DXF/SVG 带尺寸标注；读 docx 栏宽/行高 1:1 还原）|
-| `verify_label_cad.py` | ⭐ **CAD 加工图验证器**：查每格 ≤2 行 + DXF/SVG 全部文字入框（正常行距 + 行距 2x 最壞情況）；`--glob` 避中文路径坑 |
-| `regen_label_cad.py` | ✅ **重生成驱动**：glob 解析 docx 路徑，一句重生成 DXF+SVG（RCD 欄**自動合併**，唔使 flag；`--no-svg`）|
-| `render_check_label_cad.py` | ✅ **無頭自渲染自檢**：ezdxf→PNG 自渲染 + 幾何自檢（入框/居中/重疊/相撞/RCD 行數），唔使等用戶截圖；`--glob`/`--no-render`/`--png` |
-| `dx2dwg_scr.py` | ✅ **DXF→DWG 交接地**：由 DXF 生成 AutoCAD Script (.scr)，可 `--console` 自動搵 accoreconsole 無頭轉檔出 .dwg |
-| `tests/test_label_cad.py` | ✅ **pytest regression gate**：自製 fixture docx 生成 DXF+SVG 後跑全部幾何自檢 + 驗證 RCD auto-merge 真·合併；`python -m pytest tests/ -q` |
+| `verify_label_cad.py` | ⭐ **CAD 加工图验证器**：查每格 ≤2 行 + DXF/SVG 全部文字入框（正常行距 + 行距 2x 最坏情况）；`--glob` 避中文路径坑 |
+| `regen_label_cad.py` | ✅ **重生成驱动**：glob 解析 docx 路径，一句重生成 DXF+SVG（RCD 栏**自动合并**，不用 flag；`--no-svg`）|
+| `render_check_label_cad.py` | ✅ **无头自渲染自检**：ezdxf→PNG 自渲染 + 几何自检（入框/居中/重叠/相撞/RCD 行数），不用等用户截图；`--glob`/`--no-render`/`--png` |
+| `dx2dwg_scr.py` | ✅ **DXF→DWG 交接地**：由 DXF 生成 AutoCAD Script (.scr)，可 `--console` 自动找 accoreconsole 无头转档出 .dwg |
+| `tests/test_label_cad.py` | ✅ **pytest regression gate**：自制 fixture docx 生成 DXF+SVG 后跑全部几何自检 + 验证 RCD auto-merge 真·合并；`python -m pytest tests/ -q` |
 | `gen_big_labels_word.py` | 电箱名牌大标签 Word（80×50mm，48pt 两行，用户确认版）|
 | `explore_dxf.py` | DXF 结构探索（诊断）|
 | `explore_feeder_p1p2.py` / `render_feeder.py` | 馈线 MCCB 三相位置法极数判定 |
@@ -186,7 +186,7 @@ PYTHON_EXE="<cad venv python>" python make_panel_labels.py \
 2. **OOXML 唯一元素要先清再加**：`w:tcW`、`w:tblGrid` 等 schema 规定只一个，不清旧就 add 会出现两个值，Word 用错那个。
 3. **run rPr 用高层 API**：`run.bold` / `run.font.size` 会自动创建 rPr；别用 `OxmlElement('w:rPr')` 从零搭（schema 顺序问题会令 run 完全空白）。
 4. **`cell.text=''` 怪行为**：会保留第一个空 paragraph，后续 `add_run` 可能失效。安全做法：彻底删所有 paragraphs 再 rebuild。
-5. **浮動表格 + tblLayout=fixed + tblGrid 明确 gridCol widths** 才锁得住栏宽（48pt 中文字才不爆框）。
+5. **浮动表格 + tblLayout=fixed + tblGrid 明确 gridCol widths** 才锁得住栏宽（48pt 中文字才不爆框）。
 
 ### 流程/规矩类
 6. 只出 Word 不出 PNG（§2）。
@@ -203,12 +203,12 @@ PYTHON_EXE="<cad venv python>" python make_panel_labels.py \
 13. DWG→DXF：accoreconsole `_DXFOUT` 到 **ASCII 临时路径**（中文路径会静默失败）；stdout 是 UTF-16LE，别在 Python subprocess 读。
 14. ezdxf 只读 DXF 不读 DWG（先转 DXF）；COM 并发先 `taskkill /F /IM acad.exe` + sleep。
 15. **DXF 尺寸标注**：用 `msp.add_linear_dim(...).render()`；绘制单位设 `INSUNITS=5`（cm）令标注量度值直接显示 cm。dimstyle 设 `dimtxt`/`dimgap`/`dimasz`/`dimlunit=2`/`dimdec=2`。
-16. **⚠️ DXF 文字出框（最高優先）**：**絕對唔可以用「整欄一個 MTEXT + 空白行推落 + 擺板垂直中心 + MIDDLE_CENTER」**。呢招 AutoCAD 實際渲染時 `line_spacing_factor` / `MIDDLE_CENTER` 解讀差異會令成塊字高出框外。**正確做法 = 逐 row 一個 MTEXT、垂直置中喺該 row band 內**。每 row ≤2 行 → 字塊 ≤0.96cm ≪ row_h，絕對入框。SVG 天生逐 row 定位無事。驗證用 `verify_label_cad.py`（座標解析，唔靠目測）。
-17. **⚠️ 路徑字符坑**：用戶資料夾路徑如果有特殊字/罕用字，**唔好喺 bash 手打寫死路徑**（shell Unicode 編碼會靜默失敗，cp/test 都無反應）；要用 `glob.glob()` 喺 Python 內部解析（見 `regen_label_cad.py` / `verify_label_cad.py` 嘅 `--glob`）。
-18. **⚠️ verify 入框檢查會「假 pass」**：整張圖框（最外圍 sheet border）都係 color=1 LWPOLYLINE、面積最大，會包住所有文字。`_plates_from_dxf` 必須剔走面積最大嗰塊（= sheet 框），淨低先係各電箱板；否則 in-bounds 檢查永遠真。**自己寫 DXF 板偵測時切記排除 sheet 框**。
-19. **⚠️ DXF 文字樣式 font 只接受檔名**：`doc.styles.add("SIM", font=...)` 嘅 `font` 屬性只收字型**檔名**（如 `simhei.ttf`），**唔可以俾完整 Windows 路徑**。俾完整路徑 → AutoCAD 搵唔到字型 → 自動替換另一隻字型 → 字形 metrics 改變 → 文字可能出框/錯位（修正：`font_name = os.path.basename(font)`）。精確字形量度如需完整路徑，另存 `FONT_TTF_PATH[0]` 供 verify 用。
-20. **⚠️ 字型大小有意妥協（1:1 幾何 vs Word 實際 pt）**：CAD 輸出 `TEXT_H=0.30cm` 係**固定常量**，唔再由 Word `run.font.size`（pt→cm）推算。原因：Word pt 字高轉 cm 後偏細、實體標籤難讀；加工場要「每格清清楚楚」、統一字高比跟 Word 原 pt 重要。**幾何（欄寬/行高/對齊/位置）100% 跟 Word，唯獨字高統一 0.30cm**。若日後要用 Word 原 pt，改令 `TEXT_H` 由 `font_pt` 推算並重跑 verify。
-21. **⚠️ RCD 合併 flag 改名**：舊 `--merge-rcd`（開啟合併）已改成**默認自動合併**；新 flag 係 `--no-merge-rcd`（關閉）。手動落指令時**唔好再傳 `--merge-rcd`**（會變 unrecognized argument 報錯）。`regen_label_cad.py` 已唔使傳任何 RCD flag。
+16. **⚠️ DXF 文字出框（最高优先）**：**绝对不可以用「整栏一个 MTEXT + 空白行推落 + 摆板垂直中心 + MIDDLE_CENTER」**。这招 AutoCAD 实际渲染时 `line_spacing_factor` / `MIDDLE_CENTER` 解读差异会令成块字高出框外。**正确做法 = 逐 row 一个 MTEXT、垂直置中在该 row band 内**。每 row ≤2 行 → 字块 ≤0.96cm ≪ row_h，绝对入框。SVG 天生逐 row 定位无事。验证用 `verify_label_cad.py`（座标解析，不靠目测）。
+17. **⚠️ 路径字符坑**：用户资料夹路径如果有特殊字/罕用字，**不要在 bash 手打写死路径**（shell Unicode 编码会静默失败，cp/test 都无反应）；要用 `glob.glob()` 在 Python 内部解析（见 `regen_label_cad.py` / `verify_label_cad.py` 的 `--glob`）。
+18. **⚠️ verify 入框检查会「假 pass」**：整张图框（最外围 sheet border）都是 color=1 LWPOLYLINE、面积最大，会包住所有文字。`_plates_from_dxf` 必须剔走面积最大那块（= sheet 框），净低先是各电箱板；否则 in-bounds 检查永远真。**自己写 DXF 板侦测时切记排除 sheet 框**。
+19. **⚠️ DXF 文字样式 font 只接受档名**：`doc.styles.add("SIM", font=...)` 的 `font` 属性只收字型**档名**（如 `simhei.ttf`），**不可以给完整 Windows 路径**。给完整路径 → AutoCAD 找不到字型 → 自动替换另一只字型 → 字形 metrics 改变 → 文字可能出框/错位（修正：`font_name = os.path.basename(font)`）。精确字形量度如需完整路径，另存 `FONT_TTF_PATH[0]` 供 verify 用。
+20. **⚠️ 字型大小有意妥协（1:1 几何 vs Word 实际 pt）**：CAD 输出 `TEXT_H=0.30cm` 是**固定常量**，不再由 Word `run.font.size`（pt→cm）推算。原因：Word pt 字高转 cm 后偏细、实体标签难读；加工场要「每格清清楚楚」、统一字高比跟 Word 原 pt 重要。**几何（栏宽/行高/对齐/位置）100% 跟 Word，唯独字高统一 0.30cm**。若日后要用 Word 原 pt，改令 `TEXT_H` 由 `font_pt` 推算并重跑 verify。
+21. **⚠️ RCD 合并 flag 改名**：旧 `--merge-rcd`（开启合并）已改成**默认自动合并**；新 flag 是 `--no-merge-rcd`（关闭）。手动落指令时**不要再传 `--merge-rcd`**（会变 unrecognized argument 报错）。`regen_label_cad.py` 已不用传任何 RCD flag。
 
 ---
 
@@ -225,7 +225,7 @@ PYTHON_EXE="<cad venv python>" python make_panel_labels.py \
 - **脚本**：`gen_label_cad.py`
   - 必填：`--docx 标签.docx`
   - 输出：`--out 路径.dxf`（默认）或 `--out 路径.svg`；`--svg` 在 DXF 之外再多写一份 sibling `.svg`
-  - 可选：`--sheet-w 42`（图框宽 cm，自动取 max(此值, 最宽板+边距)）、`--no-percol`（跳过每栏宽标注，只留总宽/总高）、`--title "..."`、**RCD 宽列自动合并**（默认侦测含「漏電/RCD/RCCB」最左栏即合并为一格高 cell；`--no-merge-rcd` 可关掉）
+  - 可选：`--sheet-w 42`（图框宽 cm，自动取 max(此值, 最宽板+边距)）、`--no-percol`（跳过每栏宽标注，只留总宽/总高）、`--title "..."`、**RCD 宽列自动合并**（默认侦测含「漏电/RCD/RCCB」最左栏即合并为一格高 cell；`--no-merge-rcd` 可关掉）
 - **输出格式怎么选（重要）**：
   - **DXF（推荐）**：属于用户所列 `.DWG / .dxf` 家族，AutoCAD / CorelDRAW / Illustrator **均可直接「汇入」**，1:1 保留尺寸与标柱。
   - **SVG**：Illustrator / CorelDRAW 汇入最干净（黑底板 + 白字 + 红色标柱线），适合直接进排版。
@@ -242,46 +242,46 @@ PYTHON_EXE="<cad venv python>" python make_panel_labels.py \
 
 用户明确要求：DXF/SVG 的**文字排列、位置、大小**要和来源 Word 文档**完全相同**，不能自行估算。
 
-- **字型大小（用戶最終指定）**：字高統一 0.30cm（`TEXT_H=0.30`），唔再用 Word 實際 pt。所有標籤文字（用途/編號/RCD）一律 0.30cm；圖面標題另設 0.6cm。
-- **對齊（用戶最終指定）**：多行文字**水平居中 + 垂直置中**（horizontal CENTER、vertical CENTER——整組多行在格內居中、行與行等距上下對齊）。DXF `MIDDLE_CENTER`、SVG `text-anchor="middle"`，x 取 `xs[c]+col_w[c]/2`（格水平中心）。**行距**：行與行間隙 `LINE_GAP=0.18cm`（用戶指定 0.15–0.22 寬松，唔再用倍率），`line_h = TEXT_H + LINE_GAP = 0.48cm`。RCD 合併高格同樣**水平居中 + 垂直置中**。
-- **文字框結構（用戶第 5 次確認「唔好一行一字一個框」+ 第 7 次確認「字必須喺框內」）**：
-  - **SVG**：每欄 ONE `<text>`（內含多個 `<tspan>` 行），每行列 band 中心 y、`text-anchor="middle"`。`cell_lines` 封頂 2 行。
-  - **DXF（關鍵修復）**：**唔再用「整欄一個 MTEXT + 空白行推落 + 擺板垂直中心」**——嗰招喺 AutoCAD 實際渲染時，`line_spacing_factor` / `MIDDLE_CENTER` 解讀差異會令成塊字高出框外。改為**逐 row 一個 MTEXT、垂直置中喺該 row band 內**（同 SVG 邏輯一致）：`cx=xs[c]+col_w[c]/2`、`cy=y_mid_r=(top_r+bot_r)/2`、`attachment_point=5`。每 row 最多 2 行 → 字塊高 ≤2×line_h≈0.96cm ≪ row_h(≥0.9cm)，**絕對出唔到框**。RCD 合併格仍 ONE MTEXT 擺板中心（跨整塊板高、2 行、板高夠高無溢出）。DXF 內文前置 `\pqc;`（段落水平居中）+ `line_spacing_style=2`、`line_spacing_factor=line_h/TEXT_H=1.6`。已驗證：335 白字行，正常行距 0 出界，行距 2x 最壞情況 0 出界；每格 ≤2 行 0 超標。
+- **字型大小（用户最终指定）**：字高统一 0.30cm（`TEXT_H=0.30`），不再用 Word 实际 pt。所有标签文字（用途/编号/RCD）一律 0.30cm；图面标题另设 0.6cm。
+- **对齐（用户最终指定）**：多行文字**水平居中 + 垂直置中**（horizontal CENTER、vertical CENTER——整组多行在格内居中、行与行等距上下对齐）。DXF `MIDDLE_CENTER`、SVG `text-anchor="middle"`，x 取 `xs[c]+col_w[c]/2`（格水平中心）。**行距**：行与行间隙 `LINE_GAP=0.18cm`（用户指定 0.15–0.22 宽松，不再用倍率），`line_h = TEXT_H + LINE_GAP = 0.48cm`。RCD 合并高格同样**水平居中 + 垂直置中**。
+- **文字框结构（用户第 5 次确认「不要一行一字一个框」+ 第 7 次确认「字必须在框内」）**：
+  - **SVG**：每栏 ONE `<text>`（内含多个 `<tspan>` 行），每行列 band 中心 y、`text-anchor="middle"`。`cell_lines` 封顶 2 行。
+  - **DXF（关键修复）**：**不再用「整栏一个 MTEXT + 空白行推落 + 摆板垂直中心」**——那招在 AutoCAD 实际渲染时，`line_spacing_factor` / `MIDDLE_CENTER` 解读差异会令成块字高出框外。改为**逐 row 一个 MTEXT、垂直置中在该 row band 内**（同 SVG 逻辑一致）：`cx=xs[c]+col_w[c]/2`、`cy=y_mid_r=(top_r+bot_r)/2`、`attachment_point=5`。每 row 最多 2 行 → 字块高 ≤2×line_h≈0.96cm ≪ row_h(≥0.9cm)，**绝对出不到框**。RCD 合并格仍 ONE MTEXT 摆板中心（跨整块板高、2 行、板高够高无溢出）。DXF 内文前置 `\pqc;`（段落水平居中）+ `line_spacing_style=2`、`line_spacing_factor=line_h/TEXT_H=1.6`。已验证：335 白字行，正常行距 0 出界，行距 2x 最坏情况 0 出界；每格 ≤2 行 0 超标。
 - **排列 / 行序**：row0 = 用途（上行 3.1cm）、row1 = 编号（下行 0.9cm）。**分界（水平分隔）线必须由顶向下累计**画在 `y = py+ph-Σrow_h[0..r-1]`，即 row0/row1 真正边界，**绝不可**把分界线画在 py+row_h[0]（那会停在顶部 0.9cm 处，与文字错位）。
-- **多行字數分配（關鍵新規則，`balance_lines` + `cell_lines`，用戶第 6 次確認）**：**每格（用途 row0 / 編號 row1 各自）最多 2 行**——用戶明言「文字行同線路行嘅段落行數太多，1-2 行就可以」。用戶手改 docx 嘅示例已示範為 1 行，腳本須同步統一。
-  - `balance_lines(text)`：n≤2 → 1 行；n≥3 → **2 行**（前半/後半盡量平衡，首行最多多 1 字）：3→2+1、4→2+2、5→3+2、6→3+3、7→4+3、8→4+4、9→5+4。
-  - `cell_lines(txt)`：先按顯式 `\n` 分段。**若已有 ≥2 段（作者顯式斷行）→ 保留每段 1 行、唔再拆、整格封頂 2 行（取前 2 段）**；若只有 1 段，過長先過 `balance_lines`（封頂 2 行），非 CJK 原樣 1 行。
-  - 關鍵修正：舊版 `balance_lines` 會把單 CJK 段拆成 3–4 行，令長名爆到 3 行；且會把顯式斷行再拆，變成 3 行。新版封頂 2 行後全部格 ≤2。
-- **RCD 列自动合并（默认自动）**：docx 的 RCD 宽列（c0）在 row0 与 row1 若都写了「漏電斷路掣\nR C D」（非合并单元格），**默认脚本自动侦测含「漏電/RCD/RCCB」最左栏并合并**为**一格跨整块板高**的高 cell，文字取 row0 一次、按 `\n` 分两段**水平居中 + 垂直置中**，**分隔线不穿过该列**（只从 RCD 右界画到板右）。唔使再手打 flag；要关掉用 `--no-merge-rcd`。
-  - **RCD 段换行规则（`rcd_lines` 专属，≠ `balance_lines`）**：CJK 段「漏電斷路掣」若 `len×TEXT_H ≤ 列宽−2·LEFT_MARGIN`（**一行摆得落**）就**整段一行**；摆唔落才拆成**三行**（按余数 1/2/3 分配字数）。
+- **多行字数分配（关键新规则，`balance_lines` + `cell_lines`，用户第 6 次确认）**：**每格（用途 row0 / 编号 row1 各自）最多 2 行**——用户明言「文字行同线路行的段落行数太多，1-2 行就可以」。用户手改 docx 的示例已示范为 1 行，脚本须同步统一。
+  - `balance_lines(text)`：n≤2 → 1 行；n≥3 → **2 行**（前半/后半尽量平衡，首行最多多 1 字）：3→2+1、4→2+2、5→3+2、6→3+3、7→4+3、8→4+4、9→5+4。
+  - `cell_lines(txt)`：先按显式 `\n` 分段。**若已有 ≥2 段（作者显式断行）→ 保留每段 1 行、不再拆、整格封顶 2 行（取前 2 段）**；若只有 1 段，过长先过 `balance_lines`（封顶 2 行），非 CJK 原样 1 行。
+  - 关键修正：旧版 `balance_lines` 会把单 CJK 段拆成 3–4 行，令长名爆到 3 行；且会把显式断行再拆，变成 3 行。新版封顶 2 行后全部格 ≤2。
+- **RCD 列自动合并（默认自动）**：docx 的 RCD 宽列（c0）在 row0 与 row1 若都写了「漏电断路掣\nR C D」（非合并单元格），**默认脚本自动侦测含「漏电/RCD/RCCB」最左栏并合并**为**一格跨整块板高**的高 cell，文字取 row0 一次、按 `\n` 分两段**水平居中 + 垂直置中**，**分隔线不穿过该列**（只从 RCD 右界画到板右）。不用再手打 flag；要关掉用 `--no-merge-rcd`。
+  - **RCD 段换行规则（`rcd_lines` 专属，≠ `balance_lines`）**：CJK 段「漏电断路掣」若 `len×TEXT_H ≤ 列宽−2·LEFT_MARGIN`（**一行摆得落**）就**整段一行**；摆不落才拆成**三行**（按余数 1/2/3 分配字数）。
 
-### 11.2 生成後必跑驗證（鎖死「字必須喺框內」+ 每格 ≤2 行）
+### 11.2 生成后必跑验证（锁死「字必须在框内」+ 每格 ≤2 行）
 
-用 `verify_label_cad.py`（座標解析，唔靠肉眼），唔好只靠 preview：
+用 `verify_label_cad.py`（座标解析，不靠肉眼），不要只靠 preview：
 
 ```bash
 PY="<CAD_PYTHON>"
 
-# 重新生成（glob 解析路徑，避開字符坑；RCD 欄自動合併，唔使 flag）
-$PY scripts/regen_label_cad.py --glob "<DESKTOP_DIR>/*電箱*/*項目*.docx"
+# 重新生成（glob 解析路径，避开字符坑；RCD 栏自动合并，不用 flag）
+$PY scripts/regen_label_cad.py --glob "<DESKTOP_DIR>/*电箱*/*项目*.docx"
 
-# 驗證：每格 ≤2 行 + DXF/SVG 全部文字入框（含行距 2x 最壞情況）
-$PY scripts/verify_label_cad.py --glob "<DESKTOP_DIR>/*電箱*/*項目*.docx"
-#   預期輸出：✅ 全部格 ≤2 行 / ✅ 全部入框（含最壞情況）/ ✅ 全部通過
+# 验证：每格 ≤2 行 + DXF/SVG 全部文字入框（含行距 2x 最坏情况）
+$PY scripts/verify_label_cad.py --glob "<DESKTOP_DIR>/*电箱*/*项目*.docx"
+#   预期输出：✅ 全部格 ≤2 行 / ✅ 全部入框（含最坏情况）/ ✅ 全部通过
 #
-# 自動化更徹底嘅「無頭自檢」（ezdxf→PNG 自渲染 + 7 項幾何自檢，唔使等用戶截圖）：
-$PY scripts/render_check_label_cad.py --glob "<DESKTOP_DIR>/*電箱*/*項目*.dxf" --png <TEMP_DIR>/check.png
-#   自檢項目：[2]入框(含2x行距) / [4]水平居中 / [5]字同字重疊 / [6]板同板/標柱相撞 / [7]RCD行數
-#   全部 ✅ → 「自檢全部通過（唔使等用戶截圖）」
+# 自动化更彻底的「无头自检」（ezdxf→PNG 自渲染 + 7 项几何自检，不用等用户截图）：
+$PY scripts/render_check_label_cad.py --glob "<DESKTOP_DIR>/*电箱*/*项目*.dxf" --png <TEMP_DIR>/check.png
+#   自检项目：[2]入框(含2x行距) / [4]水平居中 / [5]字同字重叠 / [6]板同板/标柱相撞 / [7]RCD行数
+#   全部 ✅ → 「自检全部通过（不用等用户截图）」
 #
-# DXF → DWG 交接地（生成 .scr，可 --console 無頭轉檔出 .dwg）
-$PY scripts/dx2dwg_scr.py --glob "<DESKTOP_DIR>/*電箱*/*項目*.dxf"
+# DXF → DWG 交接地（生成 .scr，可 --console 无头转档出 .dwg）
+$PY scripts/dx2dwg_scr.py --glob "<DESKTOP_DIR>/*电箱*/*项目*.dxf"
 #
-# regression gate（pytest，自製 fixture 唔靠用戶檔）
+# regression gate（pytest，自制 fixture 不靠用户档）
 $PY -m pytest tests/ -q
 ```
 
-若報出界 → 第一時間檢查 DXF 文字定位係咪誤用咗「整欄一個 MTEXT + 空白行 + 板中心」舊招（見 §9 第 16 條）。若報「唔居中 / 重疊 / 相撞」→ 查 `read_tables` 欄寬解析或 `layout` 排版 gap 參數（見 §9 第 18、19 條）。
+若报出界 → 第一时间检查 DXF 文字定位是不是误用了「整栏一个 MTEXT + 空白行 + 板中心」旧招（见 §9 第 16 条）。若报「不居中 / 重叠 / 相撞」→ 查 `read_tables` 栏宽解析或 `layout` 排版 gap 参数（见 §9 第 18、19 条）。
 
 ---
 
@@ -297,23 +297,23 @@ $PY -m pytest tests/ -q
 
 ---
 
-## 13. 成熟度守則（agent 行為）
+## 13. 成熟度守则（agent 行为）
 
-### 13.1 由「病徵」重診斷，唔好靠估（座標解析 > 肉眼/截圖）
-- 用戶貼圖話「字出界」，**唔好第一時間當係斷詞/排版問題**。先問清楚現象（「係字飛出框？定係位置錯？」）。
-- 系統唔支援直接睇圖時，**靠 parse DXF/SVG 座標診斷**：逐一比對 MTEXT insert 座標 vs 板框 LWPOLYLINE、計算行中心有冇超出 `[y0,y1]`。本任務就係咁發現「整欄一個 MTEXT + 板中心」喺 AutoCAD 實際渲染會頂出框。
-- 一旦鎖定根因，做**可量化**嘅修復（逐 row MTEXT + 垂直置中 row band），再用 `verify_label_cad.py` / `render_check_label_cad.py` 座標自檢鎖死。
+### 13.1 由「病徵」重诊断，不要靠估（座标解析 > 肉眼/截图）
+- 用户贴图话「字出界」，**不要第一时间当是断词/排版问题**。先问清楚现象（「是字飞出框？定是位置错？」）。
+- 系统不支援直接看图时，**靠 parse DXF/SVG 座标诊断**：逐一比对 MTEXT insert 座标 vs 板框 LWPOLYLINE、计算行中心有没有超出 `[y0,y1]`。本任务就是这么发现「整栏一个 MTEXT + 板中心」在 AutoCAD 实际渲染会顶出框。
+- 一旦锁定根因，做**可量化**的修复（逐 row MTEXT + 垂直置中 row band），再用 `verify_label_cad.py` / `render_check_label_cad.py` 座标自检锁死。
 
-### 13.2 確認即沉淀（唔好等「最後」先寫）
-- 用戶確認「全完正確」當下，就應該順手寫入知識庫（對應文檔 / README / SKILL / MEMORY），而唔好等到會話尾先一次過補。確認 = 當下可沉淀。
-- 每次改咗腳本/參數/採坑，**同一回合內**就更新對應文檔同記憶；斷層會令下次又重蹈覆轍。
+### 13.2 确认即沉淀（不要等「最后」先写）
+- 用户确认「全完正确」当下，就应该顺手写入知识库（对应文档 / README / SKILL / MEMORY），而不要等到会话尾先一次过补。确认 = 当下可沉淀。
+- 每次改了脚本/参数/采坑，**同一回合内**就更新对应文档同记忆；断层会令下次又重蹈覆辙。
 
-### 13.3 自動化優先（唔使等用戶出手）
-- 凡係「要人手貼圖確認」嘅步驟，問自己：可唔可以變成腳本自檢？`render_check_label_cad.py`（ezdxf→PNG 自渲染 + 幾何自檢）就係為咗令 agent 唔使等用戶截圖就知有冇出框/唔居中/重疊/相撞。
-- 生成器改動後，**先跑 regression gate**（`python -m pytest tests/ -q`）再交付；唔好淨係手動 preview。
+### 13.3 自动化优先（不用等用户出手）
+- 凡是「要人手贴图确认」的步骤，问自己：可不可以变成脚本自检？`render_check_label_cad.py`（ezdxf→PNG 自渲染 + 几何自检）就是为了令 agent 不用等用户截图就知有没有出框/不居中/重叠/相撞。
+- 生成器改动后，**先跑 regression gate**（`python -m pytest tests/ -q`）再交付；不要净是手动 preview。
 
-### 13.4 路徑/字型等「睇唔到嘅坑」要主動鎖死
-- 中文/罕字路徑坑 → 一律 `--glob` 喺 Python 內部解析。
-- DXF style `font` 只收檔名 → 用 `os.path.basename()`。
-- verify 板偵測要剔走 sheet 外框 → 否則 in-bounds 假 pass。
-- 呢啲都係「肉眼查唔到、只喺 AutoCAD 實際開檔才爆」嘅坑，寫入 §9 對應條目，下次直接避開。
+### 13.4 路径/字型等「看不到的坑」要主动锁死
+- 中文/罕字路径坑 → 一律 `--glob` 在 Python 内部解析。
+- DXF style `font` 只收档名 → 用 `os.path.basename()`。
+- verify 板侦测要剔走 sheet 外框 → 否则 in-bounds 假 pass。
+- 这些都是「肉眼查不到、只在 AutoCAD 实际开档才爆」的坑，写入 §9 对应条目，下次直接避开。
