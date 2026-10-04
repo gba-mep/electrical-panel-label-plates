@@ -1,4 +1,4 @@
-﻿---
+---
 name: electrical-panel-label-plates
 description: 机电工程「电箱标签牌」全自动制作技能。当用户要从 CAD 单线图（SLD / DWG / DXF）读出配电箱回路表并生成黑底白字 Word 标签牌（贴在每个断路器 MCB/RCD 下方的用途+回路编号条），或要由 Word 标签牌转成带尺寸标注的 CAD 向量加工图（DXF / SVG）给广告商/加工场 1:1 落料时使用。触发词：电箱标签、配电箱标签牌、回路标签、面板标签、MCB 标签、RCD 标签、单线图回路表、电气标签牌、标签牌 CAD 加工图、label plates、panel schedule to docx / to dxf。覆盖两种 SLD 网格格式（A 纵向量表 / B 横向网格），含 RCD 极数人工确认门槛（17:25 斜线数原则）、fixed-layout 栏宽锁定、verify gate。只出 Word 不出 PNG；可加 CAD 向量加工图。
 ---
@@ -18,7 +18,7 @@ CAD 单线图 (DWG) → DXF → 解析回路表 (JSON) → 人工确认 RCD 极�
 ```
 
 **本技能脚本路径（脚本全在这里，本技能只引用、不复制代码）：**
-`<KB_DIR>/electrical-panel-labels/`
+`<SKILL_DIR>/`
 - 脚本：`scripts/` 子目录（30 个，见 §7 索引）
 - 文档：规格文档 00~08 + README
 - 回路表 JSON：示例项目电箱（多个版本）
@@ -70,7 +70,7 @@ CAD 单线图 (DWG) → DXF → 解析回路表 (JSON) → 人工确认 RCD 极�
 | 纸张 | 回路数 > 22 用 A3 横向（42×29.7cm），否则 A4 横向；边距 1.27cm |
 | 结构 | 每个 RCD 配一组（含其下 6~12 个 MCB 回路栏），备（RE）全显示；无 RCD 的尾组单独成表 |
 
-**栏宽锁死靠 `tblLayout=fixed`**：否则 Word 会把每张表自动拉到填满页宽，令 3P/1P/4P 的宽度差在不同表之间看不出分别。生成器已清除 `table.autofit=False` 自动注入的重复 `tblLayout`，并对每格清旧 `tcW` 再加。
+**栏宽锁死靠 `tblLayout=fixed`**：否则 Word 会把每张表自动拉到填满页宽，让 3P/1P/4P 的宽度差在不同表之间看不出差别。生成器已清除 `table.autofit=False` 自动注入的重复 `tblLayout`，并对每格清旧 `tcW` 再加。
 
 ---
 
@@ -133,7 +133,7 @@ PYTHON_EXE="<cad venv python>" python make_panel_labels.py \
    ↓
 7.5 （如需 CAD 加工图）编排器加 --cad [--cad-svg]，或单独跑 gen_label_cad.py --docx 标签.docx --out 标签.dxf [--svg]
    ↓
-8. 交付：docx（必出）+ dxf/svg（加工用，按需）放用户任务资料夹；同时沉淀回路表 JSON + 脚本到知识库
+8. 交付：docx（必出）+ dxf/svg（加工用，按需）放用户任务资料夹；同时把回路表 JSON + 脚本落盘到本技能目录
 ```
 
 ---
@@ -145,7 +145,7 @@ PYTHON_EXE="<cad venv python>" python make_panel_labels.py \
 | `make_panel_labels.py` | **编排入口**（解析→格式判断→极数确认→生成→verify gate→可选 CAD）|
 | `parse_sld_panels.py` | 格式 A（纵向量表）解析器 → JSON（`--dxf`/`--out`）|
 | `parse_el01.py` | 格式 B（横向网格）解析器 → JSON（`--dxf`/`--out`）；v4 含 `group_by_rccb_span()` 几何跨度量度分组 |
-| `gen_panel_labels_图书馆_v2.py` | 格式 A 生成器（`--json`/`--out`/`--paper`）|
+| `gen_panel_labels_v2.py` | 格式 A 生成器（`--json`/`--out`/`--paper`）|
 | `gen_label_docx_el01.py` | 格式 B 生成器（`--json`/`--out`/`--paper`）|
 | `verify_label_widths.py` | 栏宽校验 gate（`--docx`/`--gate`，退出码 1=不合规）|
 | `gen_label_cad.py` | **Word → CAD 向量加工图**（DXF/SVG 带尺寸标注；读 docx 栏宽/行高 1:1 还原）|
@@ -300,17 +300,17 @@ $PY -m pytest tests/ -q
 ## 13. 成熟度守则（agent 行为）
 
 ### 13.1 由「病徵」重诊断，不要靠估（座标解析 > 肉眼/截图）
-- 用户贴图话「字出界」，**不要第一时间当是断词/排版问题**。先问清楚现象（「是字飞出框？定是位置错？」）。
-- 系统不支援直接看图时，**靠 parse DXF/SVG 座标诊断**：逐一比对 MTEXT insert 座标 vs 板框 LWPOLYLINE、计算行中心有没有超出 `[y0,y1]`。本任务就是这么发现「整栏一个 MTEXT + 板中心」在 AutoCAD 实际渲染会顶出框。
+- 用户反馈「字出界」，**不要第一时间当是断词/排版问题**。先问清楚现象（「是字飞出框？还是位置错？」）。
+- 系统不支持直接看图时，**靠 parse DXF/SVG 座标诊断**：逐一比对 MTEXT insert 座标 vs 板框 LWPOLYLINE、计算行中心有没有超出 `[y0,y1]`。本任务就是这么发现「整栏一个 MTEXT + 板中心」在 AutoCAD 实际渲染会顶出框。
 - 一旦锁定根因，做**可量化**的修复（逐 row MTEXT + 垂直置中 row band），再用 `verify_label_cad.py` / `render_check_label_cad.py` 座标自检锁死。
 
-### 13.2 确认即沉淀（不要等「最后」先写）
-- 用户确认「全完正确」当下，就应该顺手写入知识库（对应文档 / README / SKILL / MEMORY），而不要等到会话尾先一次过补。确认 = 当下可沉淀。
-- 每次改了脚本/参数/采坑，**同一回合内**就更新对应文档同记忆；断层会令下次又重蹈覆辙。
+### 13.2 确认即沉淀（不要等到最后才写）
+- 用户确认「全完正确」当下，就应该顺手写进对应文档（README / SKILL），而不要等到会话末尾才一次补齐。确认 = 当下可沉淀。
+- 每次改了脚本/参数/采坑，**同一回合内**就更新对应文档与记忆；断层会令下次又重蹈覆辙。
 
 ### 13.3 自动化优先（不用等用户出手）
-- 凡是「要人手贴图确认」的步骤，问自己：可不可以变成脚本自检？`render_check_label_cad.py`（ezdxf→PNG 自渲染 + 几何自检）就是为了令 agent 不用等用户截图就知有没有出框/不居中/重叠/相撞。
-- 生成器改动后，**先跑 regression gate**（`python -m pytest tests/ -q`）再交付；不要净是手动 preview。
+- 凡是「要人手贴图确认」的步骤，问自己：可不可以变成脚本自检？`render_check_label_cad.py`（ezdxf→PNG 自渲染 + 几何自检）就是为了让 agent 不用等用户截图就知有没有出框/不居中/重叠/相撞。
+- 生成器改动后，**先跑 regression gate**（`python -m pytest tests/ -q`）再交付；不要只是手动 preview。
 
 ### 13.4 路径/字型等「看不到的坑」要主动锁死
 - 中文/罕字路径坑 → 一律 `--glob` 在 Python 内部解析。
